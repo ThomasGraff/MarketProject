@@ -1,16 +1,18 @@
 from datetime import datetime
 from functools import total_ordering
+import itertools
 
 @total_ordering
 class Order :
     
-    
+    newid = itertools.count()
     
     def __init__(self, quantity, price, buy=True):
         self.__quantity = quantity
         self.__price = price
         self.__buy = buy
         self.__date=datetime.now()
+        self.id = next(self.newid)+1 #"+1" to start at 1
 
     def __str__(self): # human-readable content
         return "%s @ %s" % (self.__quantity, self.__price)
@@ -64,28 +66,33 @@ class Book :
         
         self.__list_buy_orders.append(Order(quantity,price,True))#We had the order to the book
         n=len(self.__list_buy_orders)-1
-        self.__string+="--- Insert %s %s | Date : %s | on %s \n" % ("BUY" ,
+        temp="--- Insert %s %s | ID : % s| Date : %s | on %s \n" % ("BUY" ,
                                                                     self.__list_buy_orders[n] ,
+                                                                    self.__list_buy_orders[n].id,
                                                                     self.__list_buy_orders[n].get_date(),
                                                                     self.__name)#We make the order public
+        self.__string+=temp
         self.__list_buy_orders.sort(key= lambda o: (o,o.get_date()), reverse=True)
-        self.execute_order()
-        self.print_book()
-        
+        temp+=self.execute_order()
+        temp+=self.print_book()
+        print(temp)
         
         
         
     def insert_sell(self, quantity, price):
         self.__list_sell_orders.append(Order(quantity,price,False))#We had the order to the book
         n=len(self.__list_sell_orders)-1
-        self.__string+="--- Insert %s %s | Date : %s | on %s \n" % ("SELL",
+        temp="--- Insert %s %s | ID : % s| Date : %s | on %s \n" % ("SELL",
                                                                     self.__list_sell_orders[n] ,
+                                                                    self.__list_sell_orders[n].id,
                                                                     self.__list_sell_orders[n].get_date(),
                                                                     self.__name)#We make the order public
+        self.__string+=temp
         self.__list_sell_orders.sort(key= lambda o: (o,o.get_date()), reverse=False)
         self.__list_sell_orders.reverse()
-        self.execute_order()
-        self.print_book()
+        temp+=self.execute_order()
+        temp+=self.print_book()
+        print(temp)
         
             
     def get_list_buy_orders(self):
@@ -96,24 +103,30 @@ class Book :
     
     
     def print_book(self):
-        self.__string+="Book on %s \n" % (self.__name)
+        temp=""
+        temp+="Book on %s \n" % (self.__name)
         for k in self.__list_sell_orders + self.__list_buy_orders:
-            self.__string+="    %s %s | %s\n" % ("BUY" if k.get_buy() else "SELL", k, k.get_date())
-        self.__string+="------------------------\n\n"
+            temp+="\t %s %s | %s\n" % ("BUY" if k.get_buy() else "SELL", k, k.get_date())
+        temp+="------------------------\n\n"
+        self.__string+=temp
+        return temp
     
     def execute_order(self):
+        temp=""
         while (self.__list_sell_orders and self.__list_buy_orders) and self.__list_sell_orders[-1].get_price()<=self.__list_buy_orders[0].get_price() :
-
+            
             if self.__list_sell_orders[-1].get_quantity()>self.__list_buy_orders[0].get_quantity():
-                self.__string+="Execute %s at %s on %s\n" % (self.__list_buy_orders[0].get_quantity(),
+                temp+="Execute %s at %s on %s\n" % (self.__list_buy_orders[0].get_quantity(),
                                                              self.__list_buy_orders[0].get_price(),
                                                              self.__name)
                 self.__list_sell_orders[-1].set_quantity(self.__list_sell_orders[-1].get_quantity()-self.__list_buy_orders[0].get_quantity())
                 self.__list_buy_orders.pop(0)
 
             else :
-                self.__string+="Execute %s at %s on %s\n" % (self.__list_sell_orders[-1].get_quantity(),
+                temp+="Execute %s at %s on %s\n" % (self.__list_sell_orders[-1].get_quantity(),
                                                              self.__list_buy_orders[0].get_price(),
                                                              self.__name)
                 self.__list_buy_orders[0].set_quantity(self.__list_buy_orders[0].get_quantity()-self.__list_sell_orders[-1].get_quantity())
                 self.__list_sell_orders.pop()
+            self.__string+=temp
+        return temp
