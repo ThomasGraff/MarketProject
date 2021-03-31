@@ -1,6 +1,7 @@
 from datetime import datetime
 from functools import total_ordering
 import itertools
+import pandas as pd
 
 @total_ordering
 class Order :
@@ -74,8 +75,15 @@ class Book :
         self.__string+=temp
         self.__list_buy_orders.sort(key= lambda o: (o,o.get_date()), reverse=True)
         temp+=self.execute_order()
-        temp+=self.print_book()
+        
         print(temp)
+        print("Book on %s \n" % (self.__name))
+        df1,df2=self.print_book()
+        print(df2)
+        print("\n")
+        print(df1)
+        print("\n__________________________")
+       
         
         
         
@@ -91,8 +99,14 @@ class Book :
         self.__list_sell_orders.sort(key= lambda o: (o,o.get_date()), reverse=False)
         self.__list_sell_orders.reverse()
         temp+=self.execute_order()
-        temp+=self.print_book()
+        
         print(temp)
+        print("Book on %s \n" % (self.__name))
+        df1,df2=self.print_book()
+        print(df2)
+        print("\n")
+        print(df1)
+        print("\n__________________________")
         
             
     def get_list_buy_orders(self):
@@ -109,7 +123,21 @@ class Book :
             temp+="\t %s %s | %s\n" % ("BUY" if k.get_buy() else "SELL", k, k.get_date())
         temp+="------------------------\n\n"
         self.__string+=temp
-        return temp
+
+
+        list_df1=[]
+        list_df2=[]
+        for k in self.__list_sell_orders + self.__list_buy_orders:
+            if k.get_buy():
+                list_df1.append(["BUY",k,k.get_date()])
+                
+            else :
+                list_df2.append(["SELL",k,k.get_date()])
+        df1=pd.DataFrame(list_df1,columns=['type','Quantity & Price','Date'])
+        df2=pd.DataFrame(list_df2,columns=['type','Quantity & Price','Date'])
+
+        return df1,df2
+
     
     def execute_order(self):
         temp=""
@@ -130,3 +158,11 @@ class Book :
                 self.__list_sell_orders.pop()
             self.__string+=temp
         return temp
+
+book = Book("TEST")
+book.insert_buy(10, 10.0)
+book.insert_sell(120, 12.0)
+book.insert_buy(5, 10.0)
+book.insert_buy(2, 11.0)
+book.insert_sell(1, 10.0)
+book.insert_sell(10, 10.0)
